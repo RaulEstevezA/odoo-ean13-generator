@@ -2,6 +2,7 @@ from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.tests import tagged
 from odoo.tests.common import TransactionCase, new_test_user
 from psycopg2.errors import UniqueViolation
+from unittest.mock import patch
 
 
 @tagged("post_install", "-at_install")
@@ -264,3 +265,57 @@ class TestEan13Generation(TransactionCase):
                 }
             )
 
+    def test_concurrent_duplicate_returns_user_error(self):
+        company = self.env.company
+
+        sequence = self.env["ir.sequence"].create(
+            {
+                "name": "Secuencia para colisión concurrente",
+                "implementation": "no_gap",
+                "prefix": "6",
+                "padding": 11,
+                "number_next": 1,
+                "company_id": company.id,
+            }
+        )
+
+        company.write(
+            {
+                "ean_generation_enabled": True,
+                "ean_sequence_id": sequence.id,
+            }
+        )
+
+        self.env["product.product"].create(
+            {
+                "name": "Producto con código concurrente",
+                "company_id": company.id,
+                "barcode": "6000000000011",
+            }
+        )
+
+        product = self.env["product.product"].create(
+            {
+                "name": "Producto que sufre la colisión",
+                "company_id": company.id,
+            }
+        )
+
+        user = new_test_user(
+            self.env,
+            login="ean13_concurrent_generator",
+            groups=(
+                "base.group_user,"
+                "product_ean13_generator.group_ean13_generator"
+            ),
+        )
+
+        with patch.object(
+            type(self.product_model),
+            "_check_ean13_availability",
+            return_value=None,
+        ):
+            with self.assertRaises(UserError):
+                product.with_user(user).action_generate_ean13()
+
+        self.assertFalse(product.barcode)

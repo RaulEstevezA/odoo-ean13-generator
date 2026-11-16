@@ -1,5 +1,8 @@
+from psycopg2.errors import UniqueViolation
+
 from odoo import _, api, fields, models
 from odoo.exceptions import AccessError, UserError, ValidationError
+
 
 
 class ProductProduct(models.Model):
@@ -147,6 +150,21 @@ class ProductProduct(models.Model):
 
         self._check_ean13_availability(ean13)
 
-        self.sudo().write({"barcode": ean13})
+        try:
+            with self.env.cr.savepoint():
+                self.sudo().write({"barcode": ean13})
+        except UniqueViolation as error:
+            if (
+                error.diag.constraint_name
+                != "product_product_barcode_global_unique"
+            ):
+                raise
+
+            raise UserError(
+                _(
+                    "No se ha podido asignar el código EAN-13 porque "
+                    "ya está siendo utilizado por otra variante."
+                )
+            ) from None
 
         return True
