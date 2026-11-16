@@ -23,4 +23,5 @@ class ProductProduct(models.Model):
         weighted_sum = odd_sum + (even_sum * 3)
 
         return str((10 - (weighted_sum % 10)) % 10)
+    
 
