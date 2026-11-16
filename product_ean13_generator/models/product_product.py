@@ -1,9 +1,10 @@
 from odoo import _, api, models
-from odoo.exceptions import ValidationError
+from odoo.exceptions import UserError, ValidationError
 
 
 class ProductProduct(models.Model):
     _inherit = "product.product"
+
 
     @api.model
     def _calculate_ean13_check_digit(self, base):
@@ -23,6 +24,7 @@ class ProductProduct(models.Model):
         weighted_sum = odd_sum + (even_sum * 3)
 
         return str((10 - (weighted_sum % 10)) % 10)
+
         
     @api.model
     def _generate_ean13_from_sequence(self, sequence):
@@ -34,3 +36,35 @@ class ProductProduct(models.Model):
 
         return f"{base}{check_digit}"
 
+
+    def _validate_ean13_generation(self):
+        """Valida que el producto pueda recibir un EAN-13 generado."""
+        self.ensure_one()
+
+        if self.barcode:
+            raise UserError(
+                _("La variante ya tiene un código de barras asignado.")
+            )
+
+        if not self.company_id:
+            raise UserError(
+                _("La variante debe estar asociada a una empresa.")
+            )
+
+        if not self.company_id.ean_generation_enabled:
+            raise UserError(
+                _(
+                    "La generación de códigos EAN-13 no está habilitada "
+                    "para la empresa %(company)s.",
+                    company=self.company_id.display_name,
+                )
+            )
+
+        if not self.company_id.ean_sequence_id:
+            raise UserError(
+                _(
+                    "La empresa %(company)s no tiene configurada una "
+                    "secuencia EAN-13.",
+                    company=self.company_id.display_name,
+                )
+            )
