@@ -1,4 +1,4 @@
-from odoo import _, api, models
+from odoo import _, api, fields, models
 from odoo.exceptions import AccessError, UserError, ValidationError
 
 
@@ -13,6 +13,28 @@ class ProductProduct(models.Model):
         ),
     ]
 
+    can_generate_ean13 = fields.Boolean(
+        compute="_compute_can_generate_ean13",
+    )
+
+
+    @api.depends(
+        "barcode",
+        "company_id",
+        "company_id.ean_generation_enabled",
+        "company_id.ean_sequence_id",
+    )
+    def _compute_can_generate_ean13(self):
+        """Indica si la variante cumple las condiciones funcionales."""
+        for product in self:
+            company = product.company_id
+            product.can_generate_ean13 = bool(
+                not product.barcode
+                and company
+                and company.ean_generation_enabled
+                and company.ean_sequence_id
+            )
+            
 
     @api.model
     def _calculate_ean13_check_digit(self, base):

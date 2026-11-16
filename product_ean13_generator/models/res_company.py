@@ -1,4 +1,5 @@
 from odoo import fields, models
+from odoo.exceptions import ValidationError
 
 
 class ResCompany(models.Model):
@@ -13,7 +14,9 @@ class ResCompany(models.Model):
     ean_sequence_id = fields.Many2one(
         comodel_name="ir.sequence",
         string="Secuencia EAN-13",
+        domain="[('company_id', 'in', [False, id])]",
         check_company=True,
         ondelete="restrict",
         help="Secuencia utilizada para generar la base numérica del código EAN-13.",
     )
+
