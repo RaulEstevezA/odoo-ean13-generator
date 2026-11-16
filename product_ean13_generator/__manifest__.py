@@ -4,7 +4,7 @@
     "summary": "Generación de códigos EAN-13 para variantes de producto",
     "category": "Inventory/Inventory",
     "author": "Raúl Estévez",
-    "license": "LGPL-3",
+    "license": "AGPL-3",
     "depends": [
         "product",
     ],
