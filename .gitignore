@@ -1,3 +1,13 @@
+# Código fuente de Odoo (solo para consulta)
+odoo-src/
+
+# Python
+*.pyc
+
+# Sistema / editor
+.DS_Store
+.vscode/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
