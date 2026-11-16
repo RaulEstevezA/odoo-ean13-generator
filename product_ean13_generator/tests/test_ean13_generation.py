@@ -29,3 +29,18 @@ class TestEan13Generation(TransactionCase):
         for base in invalid_bases:
             with self.subTest(base=base), self.assertRaises(ValidationError):
                 self.product_model._calculate_ean13_check_digit(base)
+
+    def test_generate_ean13_from_sequence(self):
+        sequence = self.env["ir.sequence"].create(
+            {
+                "name": "Secuencia EAN-13 de prueba",
+                "implementation": "no_gap",
+                "padding": 12,
+                "number_next": 1,
+                "company_id": self.env.company.id,
+            }
+        )
+
+        ean13 = self.product_model._generate_ean13_from_sequence(sequence)
+
+        self.assertEqual(ean13, "0000000000017")

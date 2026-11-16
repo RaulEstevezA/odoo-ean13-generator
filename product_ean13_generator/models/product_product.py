@@ -23,5 +23,14 @@ class ProductProduct(models.Model):
         weighted_sum = odd_sum + (even_sum * 3)
 
         return str((10 - (weighted_sum % 10)) % 10)
-    
+        
+    @api.model
+    def _generate_ean13_from_sequence(self, sequence):
+        """Genera un EAN-13 completo utilizando una secuencia configurada."""
+        sequence.ensure_one()
+
+        base = sequence.next_by_id()
+        check_digit = self._calculate_ean13_check_digit(base)
+
+        return f"{base}{check_digit}"
 
