@@ -14,6 +14,7 @@
         "security/ir.model.access.csv",
         "views/res_config_settings_views.xml",
         "views/product_product_views.xml",
+        "views/product_template_views.xml",
         "views/ean13_generate_wizard_views.xml",
     ],
     "installable": True,
