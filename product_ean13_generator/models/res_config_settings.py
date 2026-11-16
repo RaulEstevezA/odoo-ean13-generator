@@ -13,4 +13,3 @@ class ResConfigSettings(models.TransientModel):
         related="company_id.ean_sequence_id",
         readonly=False,
     )
-    
