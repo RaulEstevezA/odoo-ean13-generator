@@ -12,6 +12,7 @@
     "data": [
         "security/security.xml",
         "views/res_config_settings_views.xml",
+        "views/product_product_views.xml",
     ],
     "installable": True,
     "application": False,
