@@ -17,6 +17,7 @@
         "views/product_template_views.xml",
         "views/ean13_generate_wizard_views.xml",
     ],
+    "pre_init_hook": "pre_init_hook",
     "installable": True,
     "application": False,
 }
