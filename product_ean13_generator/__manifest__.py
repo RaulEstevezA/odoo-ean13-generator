@@ -9,7 +9,9 @@
         "base_setup",
         "product",
     ],
-    "data": [],
+    "data": [
+        "security/security.xml",
+    ],
     "installable": True,
     "application": False,
 }
