@@ -24,6 +24,10 @@ class ProductProduct(models.Model):
         "company_id",
         "company_id.ean_generation_enabled",
         "company_id.ean_sequence_id",
+        "company_id.ean_sequence_id.prefix",
+        "company_id.ean_sequence_id.suffix",
+        "company_id.ean_sequence_id.padding",
+        "company_id.ean_sequence_id.use_date_range",
     )
     def _compute_can_generate_ean13(self):
         """Indica si la variante cumple las condiciones funcionales."""
@@ -34,6 +38,7 @@ class ProductProduct(models.Model):
                 and company
                 and company.ean_generation_enabled
                 and company.ean_sequence_id
+                and not company._get_ean13_sequence_errors()
             )
 
     @api.model
@@ -129,6 +134,9 @@ class ProductProduct(models.Model):
                     company=self.company_id.display_name,
                 )
             )
+
+        # Se valida antes de pedir el número para no consumir la secuencia.
+        self.company_id._raise_if_invalid_ean13_sequence(UserError)
 
     def action_generate_ean13(self):
         """Genera y asigna un EAN-13 a una variante."""
