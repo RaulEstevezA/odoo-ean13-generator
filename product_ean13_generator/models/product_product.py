@@ -1,5 +1,5 @@
 from odoo import _, api, models
-from odoo.exceptions import UserError, ValidationError
+from odoo.exceptions import AccessError, UserError, ValidationError
 
 
 class ProductProduct(models.Model):
@@ -37,6 +37,17 @@ class ProductProduct(models.Model):
         return f"{base}{check_digit}"
 
 
+    @api.model
+    def _check_ean13_generation_access(self):
+        """Comprueba que el usuario pueda generar códigos EAN-13."""
+        if not self.env.user.has_group(
+            "product_ean13_generator.group_ean13_generator"
+        ):
+            raise AccessError(
+                _("No tiene permisos para generar códigos EAN-13.")
+            )
+
+
     def _validate_ean13_generation(self):
         """Valida que el producto pueda recibir un EAN-13 generado."""
         self.ensure_one()
@@ -68,3 +79,4 @@ class ProductProduct(models.Model):
                     company=self.company_id.display_name,
                 )
             )
+

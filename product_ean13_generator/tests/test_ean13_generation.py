@@ -1,6 +1,6 @@
-from odoo.exceptions import UserError, ValidationError
+from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.tests import tagged
-from odoo.tests.common import TransactionCase
+from odoo.tests.common import TransactionCase, new_test_user
 
 
 @tagged("post_install", "-at_install")
@@ -130,5 +130,33 @@ class TestEan13Generation(TransactionCase):
         )
 
         result = product._validate_ean13_generation()
+
+        self.assertIsNone(result)
+
+    def test_reject_user_without_generation_group(self):
+        user = new_test_user(
+            self.env,
+            login="ean13_user_without_permission",
+            groups="base.group_user",
+        )
+
+        with self.assertRaises(AccessError):
+            self.product_model.with_user(
+                user
+            )._check_ean13_generation_access()
+
+    def test_accept_user_with_generation_group(self):
+        user = new_test_user(
+            self.env,
+            login="ean13_user_with_permission",
+            groups=(
+                "base.group_user,"
+                "product_ean13_generator.group_ean13_generator"
+            ),
+        )
+
+        result = self.product_model.with_user(
+            user
+        )._check_ean13_generation_access()
 
         self.assertIsNone(result)
