@@ -1,1 +1,1 @@
-from . import models, wizards
+from . import ean13_generate_wizard

@@ -1,4 +1,4 @@
-from odoo import Command, api, fields, models
+from odoo import Command, _, api, fields, models
 from odoo.exceptions import UserError
 
 
@@ -7,9 +7,9 @@ class Ean13GenerateWizard(models.TransientModel):
     _description = "Generación masiva de códigos EAN-13"
 
     product_ids = fields.Many2many(
-    comodel_name="product.product",
-    string="Variantes seleccionadas",
-    readonly=True,
+        comodel_name="product.product",
+        string="Variantes seleccionadas",
+        readonly=True,
     )
 
     state = fields.Selection(
