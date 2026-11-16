@@ -56,6 +56,30 @@ class ProductProduct(models.Model):
             )
 
 
+    @api.model
+    def _check_ean13_availability(self, ean13):
+        """Comprueba que el EAN-13 no esté utilizado en el sistema."""
+        product_exists = self.sudo().search_count(
+            [("barcode", "=", ean13)],
+            limit=1,
+        )
+
+        if product_exists:
+            raise UserError(
+                _("El código EAN-13 ya está asignado a otra variante.")
+            )
+
+        packaging_exists = self.env["product.packaging"].sudo().search_count(
+            [("barcode", "=", ean13)],
+            limit=1,
+        )
+
+        if packaging_exists:
+            raise UserError(
+                _("El código EAN-13 ya está asignado a un embalaje.")
+            )
+
+
     def _validate_ean13_generation(self):
         """Valida que el producto pueda recibir un EAN-13 generado."""
         self.ensure_one()
@@ -98,6 +122,8 @@ class ProductProduct(models.Model):
 
         sequence = self.company_id.ean_sequence_id
         ean13 = self._generate_ean13_from_sequence(sequence)
+
+        self._check_ean13_availability(ean13)
 
         self.barcode = ean13
 
