@@ -160,3 +160,43 @@ class TestEan13Generation(TransactionCase):
         )._check_ean13_generation_access()
 
         self.assertIsNone(result)
+
+    def test_action_generate_ean13(self):
+        company = self.env.company
+
+        sequence = self.env["ir.sequence"].create(
+            {
+                "name": "Secuencia para generación individual",
+                "implementation": "no_gap",
+                "padding": 12,
+                "number_next": 1,
+                "company_id": company.id,
+            }
+        )
+
+        company.write(
+            {
+                "ean_generation_enabled": True,
+                "ean_sequence_id": sequence.id,
+            }
+        )
+
+        product = self.env["product.product"].create(
+            {
+                "name": "Producto con EAN-13 generado",
+                "company_id": company.id,
+            }
+        )
+
+        user = new_test_user(
+            self.env,
+            login="ean13_individual_generator",
+            groups=(
+                "base.group_user,"
+                "product_ean13_generator.group_ean13_generator"
+            ),
+        )
+
+        product.with_user(user).action_generate_ean13()
+
+        self.assertEqual(product.barcode, "0000000000017")

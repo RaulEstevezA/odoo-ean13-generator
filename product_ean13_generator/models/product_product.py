@@ -80,3 +80,16 @@ class ProductProduct(models.Model):
                 )
             )
 
+    def action_generate_ean13(self):
+        """Genera y asigna un EAN-13 a una variante."""
+        self.ensure_one()
+
+        self._check_ean13_generation_access()
+        self._validate_ean13_generation()
+
+        sequence = self.company_id.ean_sequence_id
+        ean13 = self._generate_ean13_from_sequence(sequence)
+
+        self.barcode = ean13
+
+        return True
