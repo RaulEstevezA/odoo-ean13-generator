@@ -125,6 +125,6 @@ class ProductProduct(models.Model):
 
         self._check_ean13_availability(ean13)
 
-        self.barcode = ean13
+        self.sudo().write({"barcode": ean13})
 
         return True

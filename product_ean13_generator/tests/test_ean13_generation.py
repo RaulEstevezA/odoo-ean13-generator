@@ -1,6 +1,7 @@
 from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.tests import tagged
 from odoo.tests.common import TransactionCase, new_test_user
+from psycopg2.errors import UniqueViolation
 
 
 @tagged("post_install", "-at_install")
@@ -200,3 +201,66 @@ class TestEan13Generation(TransactionCase):
         product.with_user(user).action_generate_ean13()
 
         self.assertEqual(product.barcode, "0000000000017")
+
+    def test_reject_ean13_assigned_to_another_product(self):
+        ean13 = "0000000000017"
+
+        self.env["product.product"].create(
+            {
+                "name": "Producto con EAN-13 existente",
+                "barcode": ean13,
+            }
+        )
+
+        with self.assertRaises(UserError):
+            self.product_model._check_ean13_availability(ean13)
+
+    def test_reject_ean13_assigned_to_packaging(self):
+        ean13 = "0000000000017"
+        company = self.env.company
+
+        product = self.env["product.product"].create(
+            {
+                "name": "Producto con embalaje",
+                "company_id": company.id,
+            }
+        )
+
+        self.env["product.packaging"].create(
+            {
+                "name": "Caja de prueba",
+                "product_id": product.id,
+                "company_id": company.id,
+                "barcode": ean13,
+            }
+        )
+
+        with self.assertRaises(UserError):
+            self.product_model._check_ean13_availability(ean13)
+
+    def test_reject_duplicate_barcode_across_companies(self):
+        ean13 = "0000000000017"
+
+        other_company = self.env["res.company"].create(
+            {
+                "name": "Segunda empresa de prueba",
+            }
+        )
+
+        self.env["product.product"].create(
+            {
+                "name": "Producto de la empresa principal",
+                "company_id": self.env.company.id,
+                "barcode": ean13,
+            }
+        )
+
+        with self.assertRaises(UniqueViolation), self.env.cr.savepoint():
+            self.env["product.product"].create(
+                {
+                    "name": "Producto de la segunda empresa",
+                    "company_id": other_company.id,
+                    "barcode": ean13,
+                }
+            )
+
