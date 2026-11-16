@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record
+        id="res_config_settings_view_form_inherit_ean13"
+        model="ir.ui.view"
+    >
+        <field name="name">
+            res.config.settings.view.form.inherit.ean13
+        </field>
+        <field name="model">res.config.settings</field>
+        <field
+            name="inherit_id"
+            ref="base_setup.res_config_settings_view_form"
+        />
+        <field name="arch" type="xml">
+            <xpath
+                expr="//block[@name='companies_setting_container']"
+                position="after"
+            >
+                <block
+                    title="Códigos EAN-13"
+                    name="ean13_setting_container"
+                    groups="base.group_system"
+                >
+                    <setting
+                        id="ean_generation_enabled_setting"
+                        string="Generación de códigos EAN-13"
+                        help="Permite generar códigos EAN-13 para las variantes de esta empresa."
+                        company_dependent="1"
+                    >
+                        <field name="ean_generation_enabled"/>
+                    </setting>
+
+                    <setting
+                        id="ean_sequence_setting"
+                        string="Secuencia EAN-13"
+                        help="Secuencia utilizada para obtener la base numérica del código."
+                        company_dependent="1"
+                        invisible="not ean_generation_enabled"
+                    >
+                        <field
+                            name="ean_sequence_id"
+                            required="ean_generation_enabled"
+                        />
+                    </setting>
+                </block>
+            </xpath>
+        </field>
+    </record>
+</odoo>
