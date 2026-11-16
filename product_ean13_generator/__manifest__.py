@@ -6,6 +6,7 @@
     "author": "Raúl Estévez",
     "license": "AGPL-3",
     "depends": [
+        "base_setup",
         "product",
     ],
     "data": [],
