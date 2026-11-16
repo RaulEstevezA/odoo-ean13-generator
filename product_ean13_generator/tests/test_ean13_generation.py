@@ -1,7 +1,9 @@
-from odoo.exceptions import ValidationError
+from odoo.exceptions import UserError, ValidationError
+from odoo.tests import tagged
 from odoo.tests.common import TransactionCase
 
 
+@tagged("post_install", "-at_install")
 class TestEan13Generation(TransactionCase):
     @classmethod
     def setUpClass(cls):
@@ -44,3 +46,89 @@ class TestEan13Generation(TransactionCase):
         ean13 = self.product_model._generate_ean13_from_sequence(sequence)
 
         self.assertEqual(ean13, "0000000000017")
+
+    def test_reject_product_with_existing_barcode(self):
+        product = self.env["product.product"].create(
+            {
+                "name": "Producto con código",
+                "barcode": "1234567890128",
+            }
+        )
+
+        with self.assertRaises(UserError):
+            product._validate_ean13_generation()
+
+    def test_reject_product_without_company(self):
+        product = self.env["product.product"].create(
+            {
+                "name": "Producto sin empresa",
+                "company_id": False,
+            }
+        )
+
+        with self.assertRaises(UserError):
+            product._validate_ean13_generation()
+
+    def test_reject_generation_when_disabled(self):
+        company = self.env.company
+        company.ean_generation_enabled = False
+
+        product = self.env["product.product"].create(
+            {
+                "name": "Producto con generación desactivada",
+                "company_id": company.id,
+            }
+        )
+
+        with self.assertRaises(UserError):
+            product._validate_ean13_generation()
+
+    def test_reject_generation_without_sequence(self):
+        company = self.env.company
+        company.write(
+            {
+                "ean_generation_enabled": True,
+                "ean_sequence_id": False,
+            }
+        )
+
+        product = self.env["product.product"].create(
+            {
+                "name": "Producto sin secuencia EAN-13",
+                "company_id": company.id,
+            }
+        )
+
+        with self.assertRaises(UserError):
+            product._validate_ean13_generation()
+
+    def test_accept_product_with_valid_configuration(self):
+        company = self.env.company
+
+        sequence = self.env["ir.sequence"].create(
+            {
+                "name": "Secuencia EAN-13 válida",
+                "implementation": "no_gap",
+                "padding": 12,
+                "number_next": 1,
+                "company_id": company.id,
+            }
+        )
+
+        company.write(
+            {
+                "ean_generation_enabled": True,
+                "ean_sequence_id": sequence.id,
+            }
+        )
+
+        product = self.env["product.product"].create(
+            {
+                "name": "Producto preparado para generar EAN-13",
+                "company_id": company.id,
+            }
+        )
+
+        result = product._validate_ean13_generation()
+
+        self.assertIsNone(result)
