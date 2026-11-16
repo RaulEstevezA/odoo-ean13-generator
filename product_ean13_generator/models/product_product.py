@@ -5,6 +5,14 @@ from odoo.exceptions import AccessError, UserError, ValidationError
 class ProductProduct(models.Model):
     _inherit = "product.product"
 
+    _sql_constraints = [
+        (
+            "barcode_global_unique",
+            "UNIQUE(barcode)",
+            "El código de barras debe ser único en todo el sistema.",
+        ),
+    ]
+
 
     @api.model
     def _calculate_ean13_check_digit(self, base):
@@ -79,6 +87,7 @@ class ProductProduct(models.Model):
                     company=self.company_id.display_name,
                 )
             )
+
 
     def action_generate_ean13(self):
         """Genera y asigna un EAN-13 a una variante."""
