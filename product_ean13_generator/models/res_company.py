@@ -17,3 +17,4 @@ class ResCompany(models.Model):
         ondelete="restrict",
         help="Secuencia utilizada para generar la base numérica del código EAN-13.",
     )
+    
