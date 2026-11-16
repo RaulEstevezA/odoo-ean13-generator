@@ -27,4 +27,36 @@
             </field>
         </field>
     </record>
+
+    <!--
+        Ficha de variante que Odoo abre desde la plantilla
+        (botón "Variantes" > seleccionar una variante).
+    -->
+    <record
+        id="product_variant_easy_edit_view_inherit_ean13"
+        model="ir.ui.view"
+    >
+        <field name="name">
+            product.product.variant.easy.edit.inherit.ean13
+        </field>
+        <field name="model">product.product</field>
+        <field
+            name="inherit_id"
+            ref="product.product_variant_easy_edit_view"
+        />
+        <field name="arch" type="xml">
+            <field name="barcode" position="after">
+                <field name="can_generate_ean13" invisible="1"/>
+
+                <button
+                    name="action_generate_ean13"
+                    type="object"
+                    string="Generar EAN-13"
+                    class="btn btn-secondary"
+                    groups="product_ean13_generator.group_ean13_generator"
+                    invisible="not can_generate_ean13"
+                />
+            </field>
+        </field>
+    </record>
 </odoo>
