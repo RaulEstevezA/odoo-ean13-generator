@@ -4,7 +4,6 @@ from odoo import _, api, fields, models
 from odoo.exceptions import AccessError, UserError, ValidationError
 
 
-
 class ProductProduct(models.Model):
     _inherit = "product.product"
 
@@ -19,7 +18,6 @@ class ProductProduct(models.Model):
     can_generate_ean13 = fields.Boolean(
         compute="_compute_can_generate_ean13",
     )
-
 
     @api.depends(
         "barcode",
@@ -37,7 +35,6 @@ class ProductProduct(models.Model):
                 and company.ean_generation_enabled
                 and company.ean_sequence_id
             )
-            
 
     @api.model
     def _calculate_ean13_check_digit(self, base):
@@ -58,7 +55,6 @@ class ProductProduct(models.Model):
 
         return str((10 - (weighted_sum % 10)) % 10)
 
-        
     @api.model
     def _generate_ean13_from_sequence(self, sequence):
         """Genera un EAN-13 completo utilizando una secuencia configurada."""
@@ -68,7 +64,6 @@ class ProductProduct(models.Model):
         check_digit = self._calculate_ean13_check_digit(base)
 
         return f"{base}{check_digit}"
-
 
     @api.model
     def _check_ean13_generation_access(self):
@@ -80,11 +75,10 @@ class ProductProduct(models.Model):
                 _("No tiene permisos para generar códigos EAN-13.")
             )
 
-
     @api.model
     def _check_ean13_availability(self, ean13):
         """Comprueba que el EAN-13 no esté utilizado en el sistema."""
-        product_exists = self.sudo().search_count(
+        product_exists = self.sudo().with_context(active_test=False).search_count(
             [("barcode", "=", ean13)],
             limit=1,
         )
@@ -103,7 +97,6 @@ class ProductProduct(models.Model):
             raise UserError(
                 _("El código EAN-13 ya está asignado a un embalaje.")
             )
-
 
     def _validate_ean13_generation(self):
         """Valida que el producto pueda recibir un EAN-13 generado."""
@@ -136,7 +129,6 @@ class ProductProduct(models.Model):
                     company=self.company_id.display_name,
                 )
             )
-
 
     def action_generate_ean13(self):
         """Genera y asigna un EAN-13 a una variante."""

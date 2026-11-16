@@ -1,12 +1,17 @@
+from unittest.mock import patch
+
+from psycopg2.errors import UniqueViolation
+
 from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.tests import tagged
-from odoo.tests.common import TransactionCase, new_test_user
-from psycopg2.errors import UniqueViolation
-from unittest.mock import patch
+from odoo.tests.common import new_test_user
+from odoo.tools import mute_logger
+
+from .common import Ean13TestCommon
 
 
 @tagged("post_install", "-at_install")
-class TestEan13Generation(TransactionCase):
+class TestEan13Generation(Ean13TestCommon):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -216,6 +221,20 @@ class TestEan13Generation(TransactionCase):
         with self.assertRaises(UserError):
             self.product_model._check_ean13_availability(ean13)
 
+    def test_reject_ean13_assigned_to_archived_product(self):
+        ean13 = "0000000000017"
+
+        self.env["product.product"].create(
+            {
+                "name": "Producto archivado con EAN-13",
+                "barcode": ean13,
+                "active": False,
+            }
+        )
+
+        with self.assertRaises(UserError):
+            self.product_model._check_ean13_availability(ean13)
+
     def test_reject_ean13_assigned_to_packaging(self):
         ean13 = "0000000000017"
         company = self.env.company
@@ -239,6 +258,7 @@ class TestEan13Generation(TransactionCase):
         with self.assertRaises(UserError):
             self.product_model._check_ean13_availability(ean13)
 
+    @mute_logger("odoo.sql_db")
     def test_reject_duplicate_barcode_across_companies(self):
         ean13 = "0000000000017"
 
@@ -265,6 +285,7 @@ class TestEan13Generation(TransactionCase):
                 }
             )
 
+    @mute_logger("odoo.sql_db")
     def test_concurrent_duplicate_returns_user_error(self):
         company = self.env.company
 

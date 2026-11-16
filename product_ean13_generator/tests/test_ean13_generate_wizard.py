@@ -1,12 +1,12 @@
 from odoo import Command
 from odoo.tests import tagged
-from odoo.tests.common import TransactionCase, new_test_user
+from odoo.tests.common import new_test_user
+
+from .common import Ean13TestCommon
 
 
 @tagged("post_install", "-at_install")
-class TestEan13GenerateWizard(TransactionCase):
-
-    
+class TestEan13GenerateWizard(Ean13TestCommon):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
