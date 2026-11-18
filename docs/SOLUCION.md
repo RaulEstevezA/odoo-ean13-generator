@@ -1,10 +1,10 @@
 # Generador EAN-13 para productos: solución adoptada
 
-En este documento explico cómo he planteado el módulo `product_ean13_generator`, qué decisiones he tomado y por qué, y cómo cubre cada requisito de la prueba. Las instrucciones de instalación y uso están en el [README](../README.md).
+En este documento explico cómo he planteado el módulo `product_ean13_generator`, qué decisiones he tomado y por qué, y cómo cubre cada uno de los requisitos del módulo. Las instrucciones de instalación y uso están en el [README](../README.md).
 
 ## 1. Planteamiento general
 
-Desde el principio tuve claro que quería que toda la lógica de generación estuviera en un único sitio: el método `action_generate_ean13` de `product.product`. El enunciado pide generar códigos desde la ficha de la variante y de forma masiva, y más adelante añadí también la ficha de producto. Si cada una de esas vías tuviera sus propias comprobaciones, sería fácil que acabaran comportándose de forma distinta. Por eso todas delegan en el mismo método, y las validaciones, los permisos y la unicidad se aplican igual se entre por donde se entre.
+Desde el principio tuve claro que quería que toda la lógica de generación estuviera en un único sitio: el método `action_generate_ean13` de `product.product`. Los requisitos del módulo piden generar códigos desde la ficha de la variante y de forma masiva, y más adelante añadí también la ficha de producto. Si cada una de esas vías tuviera sus propias comprobaciones, sería fácil que acabaran comportándose de forma distinta. Por eso todas delegan en el mismo método, y las validaciones, los permisos y la unicidad se aplican igual se entre por donde se entre.
 
 ```
 Ficha de variante ──────────┐
@@ -49,7 +49,7 @@ El dígito de control lo calculo con el algoritmo estándar: las posiciones impa
 
 Cada empresa tiene su propio interruptor y su propia secuencia. En Ajustes, el bloque está marcado como dependiente de la empresa y se aplica siempre a la empresa activa.
 
-El enunciado dice que la generación solo debe hacerse si la empresa tiene los parámetros *correctamente* configurados. Al principio solo comprobaba que hubiera una secuencia asignada, pero revisando el comportamiento me di cuenta de que eso no bastaba. En el desplegable se podía elegir cualquier secuencia del sistema, por ejemplo la de albaranes internos. Al generar, el módulo pedía un número a esa secuencia y fallaba después, porque el resultado no eran 12 dígitos. Es decir, el error llegaba tarde, con un mensaje poco claro, y además se gastaba un número de la numeración de otro documento.
+Los requisitos del módulo dicen que la generación solo debe hacerse si la empresa tiene los parámetros *correctamente* configurados. Al principio solo comprobaba que hubiera una secuencia asignada, pero revisando el comportamiento me di cuenta de que eso no bastaba. En el desplegable se podía elegir cualquier secuencia del sistema, por ejemplo la de albaranes internos. Al generar, el módulo pedía un número a esa secuencia y fallaba después, porque el resultado no eran 12 dígitos. Es decir, el error llegaba tarde, con un mensaje poco claro, y además se gastaba un número de la numeración de otro documento.
 
 Por todo ello añadí una validación de la secuencia. Para que sea válida tiene que cumplir esto:
 
@@ -117,7 +117,7 @@ Uso `sudo` en dos puntos, y quiero dejar claro por qué:
 
 ## 9. Unicidad
 
-Odoo, por defecto, permite el mismo código de barras en empresas distintas. El enunciado pide códigos únicos **dentro del sistema**, así que decidí que la unicidad fuera global. Se aplica también a los códigos introducidos a mano, para que un código generado no pueda coincidir nunca con otro.
+Odoo, por defecto, permite el mismo código de barras en empresas distintas. Los requisitos del módulo piden códigos únicos **dentro del sistema**, así que decidí que la unicidad fuera global. Se aplica también a los códigos introducidos a mano, para que un código generado no pueda coincidir nunca con otro.
 
 La garantizo en tres niveles:
 
@@ -131,7 +131,7 @@ La garantizo en tres niveles:
 
 - La configuración y la secuencia se toman siempre de la **empresa del producto**, no de la empresa activa del usuario. En una generación masiva con productos de varias empresas, cada uno usa su propia secuencia.
 - Las secuencias tienen que pertenecer a la misma empresa o ser compartidas.
-- Los productos sin empresa no pueden generar código, porque no hay una configuración de empresa que aplicar. Es uno de los casos que cita el enunciado. Valoré alternativas (preguntar la empresa en un asistente, una secuencia global…), pero cada una implica una regla de negocio que el enunciado no define, y no quería inventarla.
+- Los productos sin empresa no pueden generar código, porque no hay una configuración de empresa que aplicar. Es uno de los casos que citan los requisitos del módulo. Valoré alternativas (preguntar la empresa en un asistente, una secuencia global…), pero cada una implica una regla de negocio que los requisitos del módulo no definen, y no quería inventarla.
 
 ## 11. Integridad de la información
 
@@ -174,7 +174,7 @@ Al lanzarlos contra mi base de desarrollo, algunos fallaban porque los códigos 
 
 Estas son las limitaciones que conozco. Algunas las he dejado así de forma consciente y otras dependen del propio Odoo:
 
-- **Choques con la numeración.** Si la secuencia entrega un número cuyo código ya existe (por ejemplo, porque alguien lo introdujo a mano), la generación de esa variante se detiene con un error en lugar de pasar al siguiente número. Nunca se crea un duplicado, pero la variante se queda sin código hasta que se ajuste la secuencia. Reintentar automáticamente implicaría consumir números en silencio, y preferí no tomar esa decisión sin que el enunciado la pidiera.
+- **Choques con la numeración.** Si la secuencia entrega un número cuyo código ya existe (por ejemplo, porque alguien lo introdujo a mano), la generación de esa variante se detiene con un error en lugar de pasar al siguiente número. Nunca se crea un duplicado, pero la variante se queda sin código hasta que se ajuste la secuencia. Reintentar automáticamente implicaría consumir números en silencio, y preferí no tomar esa decisión sin que los requisitos del módulo la pidieran.
 - **Códigos GS1.** Los códigos son EAN-13 válidos, pero solo son oficiales si la secuencia usa como prefijo el prefijo de empresa asignado por GS1.
 - **Rango de la secuencia.** Odoo guarda el siguiente número de una secuencia como entero de 32 bits (máximo 2.147.483.647), menos que el rango teórico de 12 dígitos. Lo descubrí al escribir un test de secuencia agotada. En la práctica no es un problema, pero conviene saberlo.
 - **Productos sin empresa.** No pueden generar código, por las razones del apartado 10.
